@@ -35,6 +35,8 @@ jobs:
         run: npm ci
 
       - name: 🌐 Export Web Application
+        env:
+          EXPO_BASE_URL: "/FinanceApp"
         run: |
           npx expo export --platform web
           touch dist/.nojekyll
