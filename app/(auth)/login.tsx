@@ -1,5 +1,5 @@
 // ============================================
-// Login Screen - With Firebase + Instant Demo Access
+// Modern Login Screen (Fintech Luxury UI)
 // ============================================
 
 import React, { useState } from 'react';
@@ -13,12 +13,13 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/src/store/authStore';
 import { isValidEmail } from '@/src/utils/helpers';
-import { isFirebaseConfigured } from '@/src/services/firebase';
+import { THEME } from '@/src/utils/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -30,19 +31,19 @@ export default function LoginScreen() {
     clearError();
 
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in both email and password.');
+      Alert.alert('Required Fields', 'Please enter your email and password.');
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
     try {
       await signIn(email.trim(), password);
     } catch (err: any) {
-      Alert.alert('Login Failed', err.message || 'Something went wrong.');
+      Alert.alert('Login Failed', err.message || 'Check your credentials.');
     }
   };
 
@@ -50,38 +51,41 @@ export default function LoginScreen() {
     try {
       await signInDemo();
     } catch (err: any) {
-      Alert.alert('Demo Error', err.message);
+      Alert.alert('Error', err.message);
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.iconWrapper}>
-            <Ionicons name="wallet" size={42} color="#fff" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Brand Icon & Welcome Header */}
+        <View style={styles.brandSection}>
+          <View style={styles.iconEmblem}>
+            <Ionicons name="wallet-sharp" size={38} color="#FFFFFF" />
           </View>
-          <Text style={styles.title}>BudgetApp</Text>
-          <Text style={styles.subtitle}>Smart Cross-Platform Personal Finance</Text>
-          {!isFirebaseConfigured() && (
-            <View style={styles.demoBadge}>
-              <Text style={styles.demoBadgeText}>✨ Ready for Review & Testing</Text>
-            </View>
-          )}
+          <Text style={styles.brandTitle}>BudgetApp</Text>
+          <Text style={styles.brandSubtitle}>Personal Finance & Wealth Tracking</Text>
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
+        {/* Input Card Container */}
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Welcome Back</Text>
+          <Text style={styles.formDesc}>Sign in to manage your budget and savings</Text>
+
+          {/* Email Field */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="mail-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
+              style={styles.inputField}
+              placeholder="Email address"
+              placeholderTextColor={THEME.colors.textMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -90,59 +94,73 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+          {/* Password Field */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="lock-closed-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
+              style={styles.inputField}
               placeholder="Password"
-              placeholderTextColor="#999"
+              placeholderTextColor={THEME.colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoComplete="password"
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color="#999"
+                size={19}
+                color={THEME.colors.textMuted}
               />
             </TouchableOpacity>
           </View>
 
+          {/* Primary Sign In Button */}
           <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+            style={[styles.primaryBtn, isLoading && { opacity: 0.7 }]}
             onPress={handleLogin}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
+              <Text style={styles.primaryBtnText}>Sign In</Text>
             )}
           </TouchableOpacity>
 
-          {/* Quick Demo Access for Senior Dev Testing */}
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerLabel}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* One-Tap Senior Dev Guest Access Button */}
           <TouchableOpacity
-            style={styles.demoButton}
+            style={styles.demoAccessBtn}
             onPress={handleDemoAccess}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
-            <Ionicons name="flash" size={18} color="#4A90D9" />
-            <Text style={styles.demoButtonText}>Explore App (One-Tap Demo)</Text>
+            <Ionicons name="flash-sharp" size={17} color={THEME.colors.primary} />
+            <Text style={styles.demoAccessBtnText}>Explore App (1-Tap Demo)</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+        {/* Footer Navigation */}
+        <View style={styles.footerRow}>
+          <Text style={styles.footerPrompt}>Don't have an account? </Text>
           <Link href="/(auth)/register" asChild>
             <TouchableOpacity>
-              <Text style={styles.footerLink}>Sign Up</Text>
+              <Text style={styles.footerLink}>Create Account</Text>
             </TouchableOpacity>
           </Link>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -150,118 +168,143 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: THEME.colors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 40,
   },
-  header: {
+  brandSection: {
     alignItems: 'center',
-    marginBottom: 36,
+    marginBottom: 32,
   },
-  iconWrapper: {
-    width: 76,
-    height: 76,
+  iconEmblem: {
+    width: 72,
+    height: 72,
     borderRadius: 24,
-    backgroundColor: '#4A90D9',
+    backgroundColor: THEME.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#4A90D9',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    ...THEME.shadows.elevated,
   },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#1A1A2E',
+  brandTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
     marginTop: 14,
+    letterSpacing: -0.5,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 6,
+  brandSubtitle: {
+    fontSize: 13,
+    color: THEME.colors.textMuted,
+    marginTop: 4,
+    fontWeight: '500',
   },
-  demoBadge: {
-    marginTop: 10,
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+
+  // Form Card
+  formCard: {
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.radius.xl,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    ...THEME.shadows.card,
   },
-  demoBadgeText: {
-    color: '#2E7D32',
-    fontSize: 12,
-    fontWeight: '600',
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
   },
-  form: {
-    gap: 14,
+  formDesc: {
+    fontSize: 13,
+    color: THEME.colors.textMuted,
+    marginTop: 2,
+    marginBottom: 20,
   },
-  inputContainer: {
+  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 2,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.radius.md,
+    paddingHorizontal: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: THEME.colors.border,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
-  input: {
+  inputField: {
     flex: 1,
-    fontSize: 15,
-    color: '#333',
+    fontSize: 14,
+    color: THEME.colors.textPrimary,
     paddingVertical: 14,
   },
-  button: {
-    backgroundColor: '#4A90D9',
-    borderRadius: 12,
+  primaryBtn: {
+    backgroundColor: THEME.colors.primary,
+    borderRadius: THEME.radius.md,
     paddingVertical: 15,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
+    ...THEME.shadows.elevated,
   },
-  buttonDisabled: {
-    opacity: 0.7,
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+
+  // Divider
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
   },
-  demoButton: {
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: THEME.colors.border,
+  },
+  dividerLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: THEME.colors.textMuted,
+    marginHorizontal: 10,
+  },
+
+  // Demo Button
+  demoAccessBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#EBF3FC',
-    borderRadius: 12,
+    backgroundColor: THEME.colors.primaryLight,
+    borderRadius: THEME.radius.md,
     paddingVertical: 14,
-    gap: 8,
     borderWidth: 1,
-    borderColor: '#CCE1F8',
+    borderColor: '#C7D2FE',
+    gap: 8,
   },
-  demoButtonText: {
-    color: '#2A70B8',
-    fontSize: 15,
-    fontWeight: '600',
+  demoAccessBtnText: {
+    color: THEME.colors.primary,
+    fontSize: 14,
+    fontWeight: '700',
   },
-  footer: {
+
+  // Footer
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 28,
   },
-  footerText: {
-    color: '#666',
-    fontSize: 14,
+  footerPrompt: {
+    fontSize: 13,
+    color: THEME.colors.textSecondary,
   },
   footerLink: {
-    color: '#4A90D9',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.primary,
   },
 });

@@ -1,86 +1,126 @@
 // ============================================
-// Tab Layout - Bottom Navigation
+// Modern Tab Layout - Elevated Bottom Bar with Floating Center Action
 // ============================================
 
 import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from '@/components/useColorScheme';
+import { THEME } from '@/src/utils/theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#4A90D9',
-        tabBarInactiveTintColor: isDark ? '#888888' : '#999999',
+        tabBarActiveTintColor: THEME.colors.primary,
+        tabBarInactiveTintColor: THEME.colors.textMuted,
+        headerShown: false, // Clean custom headers per screen
         tabBarStyle: {
-          backgroundColor: isDark ? '#1A1A2E' : '#ffffff',
-          borderTopColor: isDark ? '#2A2A3E' : '#E8E8E8',
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 65,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#F1F5F9',
+          borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 88 : 68,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingTop: 10,
+          elevation: 12,
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.04,
+          shadowRadius: 16,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-        },
-        headerStyle: {
-          backgroundColor: isDark ? '#1A1A2E' : '#ffffff',
-        },
-        headerTintColor: isDark ? '#ffffff' : '#1A1A2E',
-        headerTitleStyle: {
-          fontWeight: 'bold',
+          marginTop: 2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={String(color || '#4A90D9')} />
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={23}
+              color={String(color || THEME.colors.primary)}
+            />
           ),
         }}
       />
+
       <Tabs.Screen
         name="transactions"
         options={{
           title: 'History',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="list" size={size} color={String(color || '#4A90D9')} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'receipt' : 'receipt-outline'}
+              size={23}
+              color={String(color || THEME.colors.primary)}
+            />
           ),
         }}
       />
+
       <Tabs.Screen
         name="add"
         options={{
-          title: 'Add',
+          title: '',
           tabBarIcon: () => (
-            <Ionicons name="add-circle" size={32} color="#4A90D9" />
+            <View style={styles.floatingCenterButton}>
+              <Ionicons name="add" size={28} color="#FFFFFF" />
+            </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="budget"
         options={{
-          title: 'Budget',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="pie-chart" size={size} color={String(color || '#4A90D9')} />
+          title: 'Analytics',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'pie-chart' : 'pie-chart-outline'}
+              size={23}
+              color={String(color || THEME.colors.primary)}
+            />
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={String(color || '#4A90D9')} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={23}
+              color={String(color || THEME.colors.primary)}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  floatingCenterButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: THEME.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Platform.OS === 'ios' ? 18 : 12,
+    shadowColor: THEME.colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+});

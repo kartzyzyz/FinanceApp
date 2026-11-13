@@ -1,5 +1,5 @@
 // ============================================
-// Budget & Analytics Screen
+// Modern Budget Targets & Analytics Screen
 // ============================================
 
 import React, { useMemo } from 'react';
@@ -8,40 +8,44 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { formatCurrency, getMonthName } from '@/src/utils/helpers';
 import { getCategoryByName } from '@/src/utils/categories';
+import { THEME } from '@/src/utils/theme';
 
-// Default budget threshold per category for demonstration
 const DEFAULT_CATEGORY_LIMITS: Record<string, number> = {
-  'Food & Dining': 5000,
-  'Groceries': 8000,
-  'Shopping': 6000,
-  'Bills & Utilities': 7000,
-  'Transportation': 4000,
-  'Entertainment': 3000,
-  'Health': 4000,
-  'Education': 5000,
-  'Others': 3000,
+  'Food & Dining': 6000,
+  'Groceries': 10000,
+  'Shopping': 7000,
+  'Bills & Utilities': 8000,
+  'Transportation': 5000,
+  'Entertainment': 4000,
+  'Health & Medical': 5000,
+  'Education': 6000,
+  'Personal Care': 3000,
+  'Others': 4000,
 };
 
 export default function BudgetScreen() {
   const { selectedMonth, selectedYear, getMonthlySummary } = useTransactionStore();
   const summary = getMonthlySummary();
 
-  const totalMonthlyBudget = 35000;
+  const totalMonthlyTarget = 40000;
   const budgetUsagePercent = Math.min(
-    100,
-    Math.round((summary.totalExpenses / totalMonthlyBudget) * 100)
+    150,
+    Math.round((summary.totalExpenses / totalMonthlyTarget) * 100)
   );
+
+  const isOverBudget = summary.totalExpenses > totalMonthlyTarget;
+  const isNearLimit = !isOverBudget && budgetUsagePercent >= 80;
 
   const categoryBudgetItems = useMemo(() => {
     return summary.categoryBreakdown.map((item) => {
       const limit = DEFAULT_CATEGORY_LIMITS[item.category] || 5000;
-      const percent = Math.min(100, Math.round((item.amount / limit) * 100));
+      const percent = Math.min(150, Math.round((item.amount / limit) * 100));
       const remaining = Math.max(0, limit - item.amount);
       const isOver = item.amount > limit;
       return {
@@ -55,22 +59,79 @@ export default function BudgetScreen() {
   }, [summary.categoryBreakdown]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Month Label */}
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Budget & Targets</Text>
-        <Text style={styles.subtitle}>
-          {getMonthName(selectedMonth)} {selectedYear}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Top Header */}
+      <View style={styles.header}>
+        <Text style={styles.screenTitle}>Budget & Targets</Text>
+        <Text style={styles.screenSubtitle}>
+          {getMonthName(selectedMonth)} {selectedYear} Financial Plan
         </Text>
       </View>
 
-      {/* Overview Card */}
-      <View style={styles.overviewCard}>
-        <View style={styles.overviewHeader}>
-          <Text style={styles.overviewTitle}>Overall Monthly Budget</Text>
-          <Text style={styles.overviewRatio}>
-            {formatCurrency(summary.totalExpenses)} / {formatCurrency(totalMonthlyBudget)}
-          </Text>
+      {/* Main Budget Health Card */}
+      <View style={styles.masterBudgetCard}>
+        <View style={styles.masterTopRow}>
+          <View>
+            <Text style={styles.masterLabel}>TOTAL MONTHLY CAP</Text>
+            <Text style={styles.masterAmount}>
+              {formatCurrency(summary.totalExpenses)}
+              <Text style={styles.masterTotal}> / {formatCurrency(totalMonthlyTarget)}</Text>
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.healthPill,
+              {
+                backgroundColor: isOverBudget
+                  ? THEME.colors.expenseBg
+                  : isNearLimit
+                  ? THEME.colors.warningBg
+                  : THEME.colors.incomeBg,
+                borderColor: isOverBudget
+                  ? THEME.colors.expenseBorder
+                  : isNearLimit
+                  ? '#FDE68A'
+                  : THEME.colors.incomeBorder,
+              },
+            ]}
+          >
+            <Ionicons
+              name={
+                isOverBudget
+                  ? 'alert-circle'
+                  : isNearLimit
+                  ? 'warning-outline'
+                  : 'shield-checkmark'
+              }
+              size={14}
+              color={
+                isOverBudget
+                  ? THEME.colors.expense
+                  : isNearLimit
+                  ? THEME.colors.warning
+                  : THEME.colors.income
+              }
+            />
+            <Text
+              style={[
+                styles.healthText,
+                {
+                  color: isOverBudget
+                    ? THEME.colors.expense
+                    : isNearLimit
+                    ? '#B45309'
+                    : THEME.colors.income,
+                },
+              ]}
+            >
+              {isOverBudget ? 'Exceeded' : isNearLimit ? 'Near Cap' : 'On Track'}
+            </Text>
+          </View>
         </View>
 
         {/* Master Progress Bar */}
@@ -79,74 +140,99 @@ export default function BudgetScreen() {
             style={[
               styles.progressBarFill,
               {
-                width: `${budgetUsagePercent}%`,
-                backgroundColor:
-                  budgetUsagePercent > 90
-                    ? '#FF5252'
-                    : budgetUsagePercent > 75
-                    ? '#FFA726'
-                    : '#4CAF50',
+                width: `${Math.min(100, budgetUsagePercent)}%`,
+                backgroundColor: isOverBudget
+                  ? THEME.colors.expense
+                  : isNearLimit
+                  ? THEME.colors.warning
+                  : THEME.colors.income,
               },
             ]}
           />
         </View>
 
-        <View style={styles.statRow}>
-          <Text style={styles.statText}>
-            {budgetUsagePercent}% spent
-          </Text>
-          <Text style={styles.statText}>
-            {formatCurrency(Math.max(0, totalMonthlyBudget - summary.totalExpenses))} remaining
+        {/* Footer Metrics */}
+        <View style={styles.masterFooterRow}>
+          <Text style={styles.metricText}>{budgetUsagePercent}% of limit used</Text>
+          <Text style={styles.metricText}>
+            {isOverBudget
+              ? `Over by ${formatCurrency(summary.totalExpenses - totalMonthlyTarget)}`
+              : `${formatCurrency(totalMonthlyTarget - summary.totalExpenses)} left`}
           </Text>
         </View>
       </View>
 
-      {/* Category Budget Section */}
-      <Text style={styles.sectionHeading}>Category Budget Tracking</Text>
+      {/* Smart Financial Advice Banner */}
+      <View style={styles.insightBanner}>
+        <View style={styles.insightIconCircle}>
+          <Ionicons name="sparkles" size={18} color="#D97706" />
+        </View>
+        <View style={styles.insightContent}>
+          <Text style={styles.insightTitle}>Financial Health Assessment</Text>
+          <Text style={styles.insightBody}>
+            {summary.totalIncome > 0
+              ? `You've conserved ${Math.max(
+                  0,
+                  Math.round((summary.balance / summary.totalIncome) * 100)
+                )}% of total revenue. Keeping total expenses under 50% guarantees rapid wealth accumulation.`
+              : 'Add your salary and revenue streams to unlock automatic savings rate optimization.'}
+          </Text>
+        </View>
+      </View>
+
+      {/* Category Breakdown Header */}
+      <Text style={styles.sectionHeader}>Category Budget Limits</Text>
 
       {categoryBudgetItems.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Ionicons name="pie-chart-outline" size={48} color="#CCC" />
-          <Text style={styles.emptyText}>No expenses logged this month</Text>
-          <Text style={styles.emptySubtext}>
-            Log your transactions to track against your budget limits.
+        <View style={styles.emptyContainer}>
+          <Ionicons name="pie-chart-outline" size={38} color={THEME.colors.textMuted} />
+          <Text style={styles.emptyTitle}>No Expenses Logged Yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Add daily transactions to track category limits in real-time.
           </Text>
         </View>
       ) : (
         categoryBudgetItems.map((catItem) => {
           const catMeta = getCategoryByName(catItem.category);
+
           return (
             <View key={catItem.category} style={styles.categoryCard}>
               <View style={styles.catTopRow}>
-                <View style={styles.catInfo}>
+                <View style={styles.catIdentity}>
                   <View
                     style={[
-                      styles.iconCircle,
-                      { backgroundColor: (catMeta?.color || '#4A90D9') + '20' },
+                      styles.catIconWrap,
+                      { backgroundColor: catMeta?.bgLight || THEME.colors.surfaceSubtle },
                     ]}
                   >
                     <Ionicons
                       name={(catMeta?.icon as any) || 'pricetag-outline'}
                       size={18}
-                      color={catMeta?.color || '#4A90D9'}
+                      color={catMeta?.color || THEME.colors.primary}
                     />
                   </View>
                   <View>
-                    <Text style={styles.catName}>{catItem.category}</Text>
-                    <Text style={styles.catLimit}>
-                      Limit: {formatCurrency(catItem.limit)}
+                    <Text style={styles.catTitle}>{catItem.category}</Text>
+                    <Text style={styles.catLimitText}>
+                      Cap: {formatCurrency(catItem.limit)}
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.catSpendContainer}>
-                  <Text style={styles.catSpent}>
+                <View style={styles.catSpendArea}>
+                  <Text style={styles.catSpentText}>
                     {formatCurrency(catItem.amount)}
                   </Text>
                   <Text
                     style={[
-                      styles.catStatus,
-                      { color: catItem.isOver ? '#FF5252' : '#4CAF50' },
+                      styles.catStatusText,
+                      {
+                        color: catItem.isOver
+                          ? THEME.colors.expense
+                          : catItem.percent >= 80
+                          ? THEME.colors.warning
+                          : THEME.colors.income,
+                      },
                     ]}
                   >
                     {catItem.isOver
@@ -162,10 +248,10 @@ export default function BudgetScreen() {
                   style={[
                     styles.catProgressFill,
                     {
-                      width: `${catItem.percent}%`,
+                      width: `${Math.min(100, catItem.percent)}%`,
                       backgroundColor: catItem.isOver
-                        ? '#FF5252'
-                        : catMeta?.color || '#4A90D9',
+                        ? THEME.colors.expense
+                        : catMeta?.color || THEME.colors.primary,
                     },
                   ]}
                 />
@@ -175,21 +261,7 @@ export default function BudgetScreen() {
         })
       )}
 
-      {/* Spending Tips Card */}
-      <View style={styles.tipsCard}>
-        <Ionicons name="bulb-outline" size={24} color="#FFA726" />
-        <View style={styles.tipsContent}>
-          <Text style={styles.tipsTitle}>Smart Financial Insight</Text>
-          <Text style={styles.tipsDesc}>
-            {summary.totalIncome > 0
-              ? `Your savings rate is currently ${Math.max(
-                  0,
-                  Math.round((summary.balance / summary.totalIncome) * 100)
-                )}%. Target 20%+ for long-term financial security.`
-              : 'Add your income sources to unlock savings rate analytics and predictive tips.'}
-          </Text>
-        </View>
-      </View>
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
@@ -197,82 +269,146 @@ export default function BudgetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: THEME.colors.background,
   },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 56 : 28,
   },
-  headerRow: {
-    marginBottom: 16,
+  header: {
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1A1A2E',
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
+  screenSubtitle: {
+    fontSize: 13,
+    color: THEME.colors.textMuted,
     marginTop: 2,
   },
-  overviewCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 20,
+
+  // Master Budget Card
+  masterBudgetCard: {
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.radius.xl,
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#EFEFEF',
+    borderColor: THEME.colors.border,
+    marginBottom: 16,
+    ...THEME.shadows.card,
   },
-  overviewHeader: {
+  masterTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  overviewTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A2E',
-  },
-  overviewRatio: {
-    fontSize: 13,
+  masterLabel: {
+    fontSize: 11,
     fontWeight: '700',
-    color: '#4A90D9',
+    color: THEME.colors.textMuted,
+    letterSpacing: 0.8,
+  },
+  masterAmount: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+    marginTop: 4,
+  },
+  masterTotal: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: THEME.colors.textMuted,
+  },
+  healthPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: THEME.radius.full,
+    borderWidth: 1,
+    gap: 4,
+  },
+  healthText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   progressBarTrack: {
-    height: 12,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 6,
+    height: 10,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: 5,
     overflow: 'hidden',
+    marginBottom: 10,
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 6,
+    borderRadius: 5,
   },
-  statRow: {
+  masterFooterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
   },
-  statText: {
+  metricText: {
     fontSize: 12,
-    color: '#777',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: THEME.colors.textSecondary,
   },
-  sectionHeading: {
-    fontSize: 17,
+
+  // Insight Banner
+  insightBanner: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFBEB',
+    borderRadius: THEME.radius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+    marginBottom: 24,
+    gap: 12,
+  },
+  insightIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  insightContent: {
+    flex: 1,
+  },
+  insightTitle: {
+    fontSize: 13,
     fontWeight: '700',
-    color: '#1A1A2E',
+    color: '#92400E',
+  },
+  insightBody: {
+    fontSize: 12,
+    color: '#78350F',
+    marginTop: 3,
+    lineHeight: 17,
+  },
+
+  // Section Header
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: THEME.colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 12,
   },
+
+  // Category Card
   categoryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.radius.md,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: THEME.colors.border,
+    ...THEME.shadows.card,
   },
   catTopRow: {
     flexDirection: 'row',
@@ -280,44 +416,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  catInfo: {
+  catIdentity: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  iconCircle: {
+  catIconWrap: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  catName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A2E',
-  },
-  catLimit: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 1,
-  },
-  catSpendContainer: {
-    alignItems: 'flex-end',
-  },
-  catSpent: {
+  catTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1A1A2E',
+    color: THEME.colors.textPrimary,
   },
-  catStatus: {
+  catLimitText: {
+    fontSize: 11,
+    color: THEME.colors.textMuted,
+    marginTop: 1,
+  },
+  catSpendArea: {
+    alignItems: 'flex-end',
+  },
+  catSpentText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+  },
+  catStatusText: {
     fontSize: 11,
     fontWeight: '600',
-    marginTop: 2,
+    marginTop: 1,
   },
   catProgressTrack: {
     height: 6,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: THEME.colors.surfaceSubtle,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -325,48 +461,25 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
-  emptyCard: {
+
+  // Empty State
+  emptyContainer: {
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 32,
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#777',
-    marginTop: 8,
-  },
-  emptySubtext: {
-    fontSize: 12,
-    color: '#AAA',
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  tipsCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFF9E6',
-    borderRadius: 14,
-    padding: 14,
-    marginTop: 10,
-    gap: 12,
+    paddingVertical: 36,
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.radius.lg,
     borderWidth: 1,
-    borderColor: '#FFE082',
+    borderColor: THEME.colors.border,
   },
-  tipsContent: {
-    flex: 1,
-  },
-  tipsTitle: {
+  emptyTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#8D6E63',
+    color: THEME.colors.textPrimary,
+    marginTop: 8,
   },
-  tipsDesc: {
+  emptySubtitle: {
     fontSize: 12,
-    color: '#5D4037',
-    marginTop: 3,
-    lineHeight: 17,
+    color: THEME.colors.textMuted,
+    marginTop: 2,
   },
 });

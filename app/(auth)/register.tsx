@@ -1,5 +1,5 @@
 // ============================================
-// Register Screen
+// Modern Registration Screen
 // ============================================
 
 import React, { useState } from 'react';
@@ -13,11 +13,13 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/src/store/authStore';
 import { isValidEmail, isValidPassword } from '@/src/utils/helpers';
+import { THEME } from '@/src/utils/theme';
 
 export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState('');
@@ -31,22 +33,22 @@ export default function RegisterScreen() {
     clearError();
 
     if (!displayName.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Alert.alert('Required Fields', 'Please complete all form fields.');
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      Alert.alert('Invalid Email', 'Please provide a valid email format.');
       return;
     }
 
     if (!isValidPassword(password)) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
+      Alert.alert('Password Length', 'Password must contain at least 6 characters.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
+      Alert.alert('Mismatch', 'Confirmation password does not match.');
       return;
     }
 
@@ -60,36 +62,44 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Ionicons name="person-add" size={56} color="#4A90D9" />
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Start managing your finances today</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Brand Section */}
+        <View style={styles.brandSection}>
+          <View style={styles.iconEmblem}>
+            <Ionicons name="person-add-sharp" size={32} color="#FFFFFF" />
+          </View>
+          <Text style={styles.brandTitle}>Create Account</Text>
+          <Text style={styles.brandSubtitle}>Take control of your financial destiny</Text>
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#999" style={styles.inputIcon} />
+        {/* Form Card */}
+        <View style={styles.formCard}>
+          {/* Full Name */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="person-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              placeholderTextColor="#999"
+              style={styles.inputField}
+              placeholder="Full name"
+              placeholderTextColor={THEME.colors.textMuted}
               value={displayName}
               onChangeText={setDisplayName}
               autoCapitalize="words"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#999" style={styles.inputIcon} />
+          {/* Email */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="mail-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
+              style={styles.inputField}
+              placeholder="Email address"
+              placeholderTextColor={THEME.colors.textMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -98,60 +108,67 @@ export default function RegisterScreen() {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#999" style={styles.inputIcon} />
+          {/* Password */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="lock-closed-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999"
+              style={styles.inputField}
+              placeholder="Create password"
+              placeholderTextColor={THEME.colors.textMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color="#999"
+                size={19}
+                color={THEME.colors.textMuted}
               />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#999" style={styles.inputIcon} />
+          {/* Confirm Password */}
+          <View style={styles.inputWrap}>
+            <Ionicons name="shield-checkmark-outline" size={19} color={THEME.colors.textMuted} style={styles.inputIcon} />
             <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#999"
+              style={styles.inputField}
+              placeholder="Confirm password"
+              placeholderTextColor={THEME.colors.textMuted}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
             />
           </View>
 
+          {/* Register Button */}
           <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+            style={[styles.primaryBtn, isLoading && { opacity: 0.7 }]}
             onPress={handleRegister}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Create Account</Text>
+              <Text style={styles.primaryBtnText}>Get Started</Text>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
+        <View style={styles.footerRow}>
+          <Text style={styles.footerPrompt}>Already have an account? </Text>
           <Link href="/(auth)/login" asChild>
             <TouchableOpacity>
               <Text style={styles.footerLink}>Sign In</Text>
             </TouchableOpacity>
           </Link>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -159,77 +176,94 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: THEME.colors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 40,
   },
-  header: {
+  brandSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 28,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1A1A2E',
-    marginTop: 12,
+  iconEmblem: {
+    width: 64,
+    height: 64,
+    borderRadius: 22,
+    backgroundColor: THEME.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...THEME.shadows.elevated,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+  brandTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: THEME.colors.textPrimary,
+    marginTop: 14,
+    letterSpacing: -0.5,
   },
-  form: {
-    gap: 14,
+  brandSubtitle: {
+    fontSize: 13,
+    color: THEME.colors.textMuted,
+    marginTop: 4,
+    fontWeight: '500',
   },
-  inputContainer: {
+
+  formCard: {
+    backgroundColor: THEME.colors.surface,
+    borderRadius: THEME.radius.xl,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    ...THEME.shadows.card,
+  },
+  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    backgroundColor: THEME.colors.surfaceSubtle,
+    borderRadius: THEME.radius.md,
+    paddingHorizontal: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: THEME.colors.border,
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
-  input: {
+  inputField: {
     flex: 1,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 14,
+    color: THEME.colors.textPrimary,
     paddingVertical: 14,
   },
-  button: {
-    backgroundColor: '#4A90D9',
-    borderRadius: 12,
-    paddingVertical: 16,
+  primaryBtn: {
+    backgroundColor: THEME.colors.primary,
+    borderRadius: THEME.radius.md,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 8,
+    ...THEME.shadows.elevated,
   },
-  buttonDisabled: {
-    opacity: 0.7,
+  primaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  footer: {
+
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 28,
   },
-  footerText: {
-    color: '#666',
-    fontSize: 14,
+  footerPrompt: {
+    fontSize: 13,
+    color: THEME.colors.textSecondary,
   },
   footerLink: {
-    color: '#4A90D9',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+    color: THEME.colors.primary,
   },
 });
